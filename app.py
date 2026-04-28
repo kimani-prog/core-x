@@ -9,7 +9,7 @@ from sklearn.metrics import accuracy_score
 import os
 
 # --- 1. COMPETITION UI ENGINE (FADING ATMOSPHERIC GRADIENT) ---
-st.set_page_config(page_title="CORE X | Rectitans UoN", layout="wide", page_icon="🛡️")
+st.set_page_config(page_title="CORE X | TechTitans", layout="wide", page_icon="🛡️")
 
 st.markdown("""
     <style>
