@@ -42,10 +42,7 @@ def initialize_engine():
         raise FileNotFoundError(f"Missing {filename} in GitHub root.")
 
     df = pd.read_csv(target_path)
-    
-    # Identify labels and features
     target_col = df.columns[-1] 
-    # Select exactly 20 features
     X = df.drop([target_col], axis=1).iloc[:, :20] 
     y = df[target_col].apply(lambda x: 1 if str(x).lower() in ['malware', '1', 'positive', 'true', 'threat'] else 0)
     
@@ -82,21 +79,12 @@ with up_col:
 if uploaded_file:
     input_df = pd.read_csv(uploaded_file)
     try:
-        # --- THE FIX: FEATURE ALIGNMENT ---
-        # We create an empty row with the correct columns, then fill it with the user's data
+        # Align Features
         test_row = pd.DataFrame(columns=feature_names)
-        
-        # We fill matching columns and set missing ones to 0
         for col in feature_names:
-            if col in input_df.columns:
-                test_row.loc[0, col] = input_df[col].iloc[0]
-            else:
-                test_row.loc[0, col] = 0
+            test_row.loc[0, col] = input_df[col].iloc[0] if col in input_df.columns else 0
         
-        # Ensure all data is numeric for XGBoost
         test_row = test_row.astype(float)
-        
-        # Prediction
         prediction = model.predict(test_row.values)
         probability = model.predict_proba(test_row.values)[0][1]
 
@@ -107,15 +95,19 @@ if uploaded_file:
             else:
                 st.success(f"### ✅ CLEAN FILE\n**Integrity Score:** {1-probability:.2%}")
 
-        # --- 5. VISUALIZATION ---
+        # --- 5. VISUALIZATION (Dynamic Radar) ---
         st.divider()
         st.subheader("📊 Heuristic Feature Mapping")
         
-        risk_scores = np.random.uniform(0.2, 0.9, size=len(feature_names[:10]))
-        radar_df = pd.DataFrame(dict(r=risk_scores, theta=[f"P_{i}" for i in range(10)]))
+        # Use actual values from the uploaded row to drive the graph
+        display_values = test_row.values.flatten()[:10]
+        radar_df = pd.DataFrame(dict(
+            r=display_values, 
+            theta=[f"Vect_{i}" for i in range(len(display_values))]
+        ))
         
         fig = px.line_polar(radar_df, r='r', theta='theta', line_close=True, template="plotly_dark")
-        fig.update_traces(mode='lines+markers', fill='toself', line_color='#00ff41', marker=dict(size=8))
+        fig.update_traces(mode='lines+markers', fill='toself', line_color='#00ff41', marker=dict(size=10))
         fig.update_layout(polar=dict(radialaxis=dict(visible=True, range=[0, 1])), showlegend=False)
         st.plotly_chart(fig, use_container_width=True)
 
