@@ -39,19 +39,28 @@ def initialize_engine():
     # Load Data
     df = pd.read_csv(target_path)
     
-    # --- SMART COLUMN DETECTOR ---
-    # We find which column represents the 'Malware' vs 'Benign' tag
-    possible_labels = ['Label', 'label', 'Class', 'class', 'Status']
+    # --- ULTIMATE COLUMN DETECTOR ---
+    # We scan the actual content of the columns to find the one that says 'Malware'
     target_col = None
-    for col in possible_labels:
-        if col in df.columns:
+    for col in df.columns:
+        # Check if the column contains the string "malware" or "benign"
+        unique_values = df[col].astype(str).str.lower().unique()
+        if 'malware' in unique_values or 'benign' in unique_values:
             target_col = col
             break
     
+    # Fallback: If we still can't find it, check for a column named 'Label' or 'label'
     if target_col is None:
-        raise KeyError(f"Could not find a 'Label' column. Columns found: {df.columns.tolist()[:5]}...")
+        for col in ['Label', 'label', 'Class', 'class', 'Status']:
+            if col in df.columns:
+                target_col = col
+                break
+
+    if target_col is None:
+        raise KeyError(f"Target Column Not Found. Please rename your result column to 'Label'.")
 
     # Process Features and Target
+    # We drop the label and take the first 20 permissions as features
     X = df.drop([target_col], axis=1).iloc[:, :20] 
     y = df[target_col].apply(lambda x: 1 if str(x).lower() in ['malware', '1', 'positive'] else 0)
     
@@ -93,6 +102,7 @@ uploaded_file = st.file_uploader("Drop suspected file logs (CSV)", type="csv")
 if uploaded_file:
     input_df = pd.read_csv(uploaded_file)
     try:
+        # Match input to model features
         test_row = input_df[feature_names].iloc[:1]
         prediction = model.predict(test_row.values)
         probability = model.predict_proba(test_row.values)[0][1]
