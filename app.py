@@ -155,7 +155,7 @@ st.markdown("---")
 st.markdown(
     """
     <div class="footer-text">
-        <b>CORE X v1.0.0</b> | Powered by Tectitans Kaimosi<br>
+        <b>CORE X v1.0.0</b> | Powered by Tectitans <br>
         Part of the <b>Kenya Inclusivity in Tech Initiative</b><br>
         C4DLab University of Nairobi
     </div>
