@@ -21,9 +21,6 @@ st.markdown("""
 st.title("🛡️ SENTINEL AI: HEURISTIC ENGINE")
 st.write("Cloud-Native Malware Intelligence & Heuristic Analysis")
 
-# Global Variable for the CSV
-TARGET_FILE = 'Android_Malware.csv'
-
 col1, col2, col3 = st.columns(3)
 col1.metric("System Status", "SHIELD ACTIVE", "Live")
 col2.metric("Detection Engine", "XGBoost v4.0", "97.8% Acc")
@@ -31,16 +28,24 @@ col3.metric("Analysis Latency", "14ms", "-2ms")
 
 st.divider()
 
-# --- 3. BULLETPROOF DATA CORE ---
+# --- 3. THE "INTELLIGENT" DATA CORE ---
 @st.cache_data
 def load_and_train():
-    # Use exact pathing to find the CSV on the server
-    if os.path.exists(TARGET_FILE):
-        df = pd.read_csv(TARGET_FILE)
-    else:
-        # Emergency fallback for cloud paths
-        path = os.path.join(os.getcwd(), TARGET_FILE)
-        df = pd.read_csv(path)
+    # 1. Look at all files on the server
+    files_on_server = os.listdir('.')
+    target_name = 'Android_Malware.csv'
+    
+    # 2. Find a match (even if the caps are wrong or there's a double .csv.csv)
+    match = next((f for f in files_on_server if target_name.lower() in f.lower()), None)
+    
+    if not match:
+        # If absolutely nothing is found, show you what the server SEES
+        st.error(f"❌ DATABASE OFFLINE. I see these files: {files_on_server}")
+        st.info("Check if your CSV is named exactly 'Android_Malware.csv' and is in the main folder.")
+        st.stop()
+        
+    # 3. Load the matched file
+    df = pd.read_csv(match)
     
     # Process data: 20 features + binary label
     X = df.drop(['Label'], axis=1).iloc[:, :20] 
@@ -50,13 +55,13 @@ def load_and_train():
     model.fit(X.values, y.values)
     return model, X.columns.tolist()
 
-# Global Error Handling for Training
+# --- RUN THE ENGINE ---
 try:
-    with st.spinner("Initializing Neural Shields..."):
+    with st.spinner("🛰️ Establishing Neural Link..."):
         model, feature_names = load_and_train()
-    st.success("🛰️ Sentinel Intelligence Online")
+    st.success("📡 Sentinel Intelligence Online")
 except Exception as e:
-    st.error(f"⚠️ System Offline: Check if {TARGET_FILE} is in GitHub root.")
+    st.error(f"⚠️ Initialization Failed: {e}")
     st.stop()
 
 # --- 4. THE ANALYSIS SANDBOX ---
@@ -65,7 +70,7 @@ uploaded_file = st.file_uploader("Drop suspected security logs (CSV)", type="csv
 
 if uploaded_file:
     input_data = pd.read_csv(uploaded_file)
-    # Ensure input matches model features
+    # Match the 20 features the model was trained on
     test_row = input_data[feature_names].iloc[:1]
     
     prediction = model.predict(test_row)
@@ -82,7 +87,7 @@ if uploaded_file:
             st.info("**Recommendation:** Safe for Production Deployment")
 
     with chart_col:
-        # RADAR CHART: Visualizing Threat Vectors
+        # Visualizing Threat Vectors via Radar Chart
         risk_scores = np.random.uniform(0.1, 0.95, size=len(feature_names[:10]))
         radar_df = pd.DataFrame(dict(r=risk_scores, theta=feature_names[:10]))
         fig = px.line_polar(radar_df, r='r', theta='theta', line_close=True, template="plotly_dark")
