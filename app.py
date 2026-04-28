@@ -92,4 +92,4 @@ if uploaded_file:
         st.plotly_chart(fig, use_container_width=True)
 
 st.divider()
-st.caption("Developed by Ian Kimani | Kaimosi Friends National Polytechnic")
+st.caption("Developed by Tectitans | Kenya Incusivity in Tech Initiative")
