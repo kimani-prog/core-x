@@ -26,13 +26,13 @@ st.markdown("""
         font-family: 'Share Tech Mono', monospace; 
     }
     h1, h2, h3 { color: #00f2ff; font-family: 'Share Tech Mono', sans-serif; }
-    .footer-text { text-align: center; color: #57606a; padding-top: 50px; }
+    .footer-text { text-align: center; color: #57606a; padding-top: 50px; font-family: 'Share Tech Mono'; }
     </style>
     """, unsafe_allow_html=True)
 
 # --- 2. HEADER ---
 st.markdown("# 🛡️ CORE X: HYPERVISOR")
-st.markdown("#### **TECTITANS** // C4D LAB // UNIVERSITY OF NAIROBI")
+st.markdown("#### **RECTITANS** // C4D LAB // UNIVERSITY OF NAIROBI")
 st.divider()
 
 # --- 3. INTELLIGENCE ENGINE ---
@@ -45,7 +45,7 @@ def initialize_engine():
     if not os.path.exists(target_path):
         target_path = filename 
     if not os.path.exists(target_path):
-        raise FileNotFoundError(f"Source Data Offline")
+        raise FileNotFoundError("Source Data Offline: Android_Malware.csv not found.")
 
     df = pd.read_csv(target_path)
     target_col = df.columns[-1] 
@@ -61,16 +61,16 @@ def initialize_engine():
     return model, X.columns.tolist(), acc
 
 try:
-    with st.spinner("⚡ BOOTING NEURAL NETWORKS..."):
+    with st.spinner("⚡ SYNCHRONIZING SYSTEM KERNEL..."):
         model, feature_names, live_accuracy = initialize_engine()
     
     m1, m2, m3, m4 = st.columns(4)
-    m1.metric("SHIELD", "ARMED")
-    m2.metric("ACCURACY", f"{live_accuracy:.2%}")
-    m3.metric("UPLINK", "UoN_C4D")
-    m4.metric("REGION", "KE_HQ")
+    m1.metric("SHIELD", "ARMED", "Stable")
+    m2.metric("ACCURACY", f"{live_accuracy:.2%}", "Verified")
+    m3.metric("KERNEL", "ACTIVE", "Priority")
+    m4.metric("XGBLOCK", "ON", "Secured")
 except Exception as e:
-    st.error(f"⚠️ SYSTEM ERROR: {e}")
+    st.error(f"⚠️ SYSTEM CRITICAL: {e}")
     st.stop()
 
 st.divider()
@@ -80,7 +80,7 @@ st.header("🔍 LIVE THREAT SCANNER")
 up_col, chart_col = st.columns([1, 1.2])
 
 with up_col:
-    uploaded_file = st.file_uploader("UPLOAD CSV MANIFEST", type="csv")
+    uploaded_file = st.file_uploader("UPLOAD HEX-LOGS / CSV", type="csv")
 
 if uploaded_file:
     input_df = pd.read_csv(uploaded_file)
@@ -94,51 +94,50 @@ if uploaded_file:
         prediction = model.predict(test_row.values)
         prob = model.predict_proba(test_row.values)[0][1]
 
-        # --- 5. SIMPLIFIED REPORT ---
+        # --- 5. SCAN REPORT ---
         st.markdown('<div class="report-card">', unsafe_allow_html=True)
-        st.subheader("📋 SCAN REPORT")
+        st.subheader("📋 DIAGNOSTIC REPORT")
         
-        risk_label = "CRITICAL THREAT" if prediction[0] == 1 else "SAFE / VERIFIED"
+        risk_label = "CRITICAL THREAT DETECTED" if prediction[0] == 1 else "INTEGRITY VERIFIED"
         risk_color = "#ff4b4b" if prediction[0] == 1 else "#00f2ff"
         
         st.markdown(f"**RESULT:** <span style='color:{risk_color}; font-weight:bold;'>{risk_label}</span>", unsafe_allow_html=True)
         st.write(f"**CONFIDENCE:** {prob:.2%}")
         
         st.divider()
-        st.markdown("**RECOMMENDATION:**")
+        st.markdown("**SYSTEM RECOMMENDATION:**")
         if prediction[0] == 1:
-            st.warning("⚠️ High-risk permissions detected. Block installation and isolate device.")
+            st.error("⚠️ PROHIBIT INSTALLATION. Manifest shows high correlation with known malware vectors. XGBlock recommends immediate deletion.")
         else:
-            st.success("✔️ Permission patterns are standard. No malicious intent found.")
+            st.success("✔️ NO MALICIOUS SIGNATURES. Permission requests are consistent with benign app architecture.")
         st.markdown('</div>', unsafe_allow_html=True)
 
         with chart_col:
-            st.subheader("📊 THREAT FACTOR BREAKDOWN")
-            # Logic: Show which permissions are driving the risk score
-            # We use the feature names but clean them up for the UI
-            clean_names = [n.split('.')[-1] for n in feature_names[:10]]
-            # We generate a weight (if the permission is 1, it shows as a full bar)
-            weights = test_row.values.flatten()[:10]
+            st.subheader("📊 PERMISSION RISK WEIGHTS")
+            # Cleaning names for better UI display
+            clean_names = [n.split('.')[-1] for n in feature_names[:12]]
+            weights = test_row.values.flatten()[:12]
             
-            fig_df = pd.DataFrame({'Permission': clean_names, 'Presence': weights})
-            fig = px.bar(fig_df, x='Presence', y='Permission', orientation='h',
-                         color='Presence', color_continuous_scale=['#00f2ff', '#ff4b4b'])
+            fig_df = pd.DataFrame({'Permission': clean_names, 'Detected': weights})
+            fig = px.bar(fig_df, x='Detected', y='Permission', orientation='h',
+                         color='Detected', color_continuous_scale=['#00f2ff', '#ff4b4b'])
             
             fig.update_layout(
                 paper_bgcolor='rgba(0,0,0,0)',
                 plot_bgcolor='rgba(0,0,0,0)',
                 font_color="#ffffff",
-                xaxis=dict(showgrid=False, title="Permission Severity Weight"),
+                xaxis=dict(showgrid=False, title="Heuristic Impact", range=[0,1]),
                 yaxis=dict(showgrid=False),
                 showlegend=False,
                 coloraxis_showscale=False,
-                height=400
+                height=450,
+                margin=dict(l=20, r=20, t=20, b=20)
             )
             st.plotly_chart(fig, use_container_width=True)
 
     except Exception as e:
-        st.error(f"ANALYSIS ERROR: {e}")
+        st.error(f"ANALYSIS INTERRUPTED: {e}")
 
 # --- 6. FOOTER ---
 st.markdown("---")
-st.markdown("""<div class="footer-text"><b>CORE X // RECTITANS</b><br>C4D LAB // UNIVERSITY OF NAIROBI</div>""", unsafe_allow_html=True)
+st.markdown("""<div class="footer-text"><b>HYPERVISOR v1.0.0 // RECTITANS</b><br>C4D LAB // UNIVERSITY OF NAIROBI // STRATEGIC DEFENSE UNIT</div>""", unsafe_allow_html=True)
