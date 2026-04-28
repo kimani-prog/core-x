@@ -8,7 +8,7 @@ from sklearn.metrics import accuracy_score
 import os
 
 # --- 1. UI & THEME CONFIGURATION ---
-st.set_page_config(page_title="CORE X | Tectitans", layout="wide", page_icon="🛡️")
+st.set_page_config(page_title="CORE X | Tectitans Kaimosi", layout="wide", page_icon="🛡️")
 
 st.markdown("""
     <style>
@@ -26,7 +26,7 @@ st.markdown("""
 
 # --- 2. HEADER ---
 st.title("🛡️ CORE X: HYPERVISOR")
-st.markdown("#### **Tectitans** | Kenya Inclusivity in Tech Initiative")
+st.markdown("#### **Tectitans Kaimosi** | Kenya Inclusivity in Tech Initiative")
 st.divider()
 
 # --- 3. DATA ENGINE ---
@@ -42,7 +42,10 @@ def initialize_engine():
         raise FileNotFoundError(f"Missing {filename} in GitHub root.")
 
     df = pd.read_csv(target_path)
+    
+    # Identify labels and features
     target_col = df.columns[-1] 
+    # Select exactly 20 features
     X = df.drop([target_col], axis=1).iloc[:, :20] 
     y = df[target_col].apply(lambda x: 1 if str(x).lower() in ['malware', '1', 'positive', 'true', 'threat'] else 0)
     
@@ -63,7 +66,6 @@ try:
     m2.metric("CORE ACCURACY", f"{live_accuracy:.2%}", "Verified")
     m3.metric("NEURAL DEPTH", "100 Layers", "Stable")
     m4.metric("REGION", "KENYA", "HQ")
-    st.success("🛰️ Systems Check Optimal.")
 except Exception as e:
     st.error(f"⚠️ SYSTEM OFFLINE: {e}")
     st.stop()
@@ -80,7 +82,21 @@ with up_col:
 if uploaded_file:
     input_df = pd.read_csv(uploaded_file)
     try:
-        test_row = input_df[feature_names].iloc[:1]
+        # --- THE FIX: FEATURE ALIGNMENT ---
+        # We create an empty row with the correct columns, then fill it with the user's data
+        test_row = pd.DataFrame(columns=feature_names)
+        
+        # We fill matching columns and set missing ones to 0
+        for col in feature_names:
+            if col in input_df.columns:
+                test_row.loc[0, col] = input_df[col].iloc[0]
+            else:
+                test_row.loc[0, col] = 0
+        
+        # Ensure all data is numeric for XGBoost
+        test_row = test_row.astype(float)
+        
+        # Prediction
         prediction = model.predict(test_row.values)
         probability = model.predict_proba(test_row.values)[0][1]
 
@@ -91,7 +107,7 @@ if uploaded_file:
             else:
                 st.success(f"### ✅ CLEAN FILE\n**Integrity Score:** {1-probability:.2%}")
 
-        # --- 5. FIXED VISUALIZATION ---
+        # --- 5. VISUALIZATION ---
         st.divider()
         st.subheader("📊 Heuristic Feature Mapping")
         
@@ -99,15 +115,7 @@ if uploaded_file:
         radar_df = pd.DataFrame(dict(r=risk_scores, theta=[f"P_{i}" for i in range(10)]))
         
         fig = px.line_polar(radar_df, r='r', theta='theta', line_close=True, template="plotly_dark")
-        
-        # FIXED: Changed 'markers' to 'marker' and set mode to show points
-        fig.update_traces(
-            mode='lines+markers',
-            fill='toself', 
-            line_color='#00ff41', 
-            marker=dict(size=8, color='#00ff41') 
-        )
-        
+        fig.update_traces(mode='lines+markers', fill='toself', line_color='#00ff41', marker=dict(size=8))
         fig.update_layout(polar=dict(radialaxis=dict(visible=True, range=[0, 1])), showlegend=False)
         st.plotly_chart(fig, use_container_width=True)
 
@@ -115,5 +123,4 @@ if uploaded_file:
         st.error(f"⚠️ Analysis Interrupted: {e}")
 
 st.markdown("---")
-st.markdown("""<div class="footer-text"><b>CORE X v1.0.0</b> | Powered by Tectitans<br>Part of the <b>Kenya Inclusivity in Tech Initiative</b></div>""", unsafe_allow_html=True)
-
+st.markdown("""<div class="footer-text"><b>CORE X v1.0.0</b> | Powered by Tectitans Kaimosi<br>Part of the <b>Kenya Inclusivity in Tech Initiative</b></div>""", unsafe_allow_html=True)
