@@ -3,9 +3,9 @@ import pandas as pd
 import numpy as np
 import plotly.express as px
 from xgboost import XGBClassifier
-from sklearn.model_selection import train_test_split
+import os
 
-# --- 1. CYBER-GLOW UI CONFIG ---
+# --- 1. UI CONFIG ---
 st.set_page_config(page_title="SENTINEL AI | Threat Intelligence", layout="wide")
 
 st.markdown("""
@@ -13,12 +13,13 @@ st.markdown("""
     .main { background-color: #0e1117; color: #ffffff; }
     .stMetric { background-color: #161b22; border: 1px solid #30363d; padding: 15px; border-radius: 10px; }
     [data-testid="stMetricValue"] { color: #00ff41; font-family: 'Courier New'; }
+    .stAlert { background-color: #161b22; border: 1px solid #30363d; }
     </style>
     """, unsafe_allow_html=True)
 
 # --- 2. THE WAR ROOM HEADER ---
 st.title("🛡️ SENTINEL AI: HEURISTIC ENGINE")
-st.write("Real-time Android Malware Analysis & Threat Mapping")
+st.write("Cloud-Native Malware Intelligence & Heuristic Analysis")
 
 col1, col2, col3 = st.columns(3)
 col1.metric("System Status", "SHIELD ACTIVE", "Live")
@@ -27,49 +28,65 @@ col3.metric("Analysis Latency", "14ms", "-2ms")
 
 st.divider()
 
-# --- 3. DATA & MODEL CORE ---
+# --- 3. BULLETPROOF DATA CORE ---
 @st.cache_data
 def load_and_train():
-    df = pd.read_csv('Android_Malware.csv')
-    # Focus on the 20 most critical permissions
+    # Use exact pathing to find the CSV on the server
+    file_name = 'Android_Malware.csv'
+    if os.path.exists(file_name):
+        df = pd.read_csv(file_name)
+    else:
+        # Emergency fallback for cloud paths
+        path = os.path.join(os.getcwd(), file_name)
+        df = pd.read_csv(path)
+    
+    # Process data: 20 features + binary label
     X = df.drop(['Label'], axis=1).iloc[:, :20] 
     y = df['Label'].apply(lambda x: 1 if x == 'Malware' else 0)
     
     model = XGBClassifier(n_estimators=100, learning_rate=0.1, max_depth=5)
-    model.fit(X, y)
+    model.fit(X.values, y.values) # Using .values for faster processing
     return model, X.columns.tolist()
 
+# Global Error Handling for Training
 try:
-    model, feature_names = load_and_train()
-except:
-    st.error("⚠️ Database connection offline. Please check your CSV file.")
+    with st.spinner("Initializing Neural Shields..."):
+        model, feature_names = load_and_train()
+    st.success("🛰️ Sentinel Intelligence Online")
+except Exception as e:
+    st.error(f"⚠️ System Offline: Check if {file_name} is in GitHub root.")
+    st.stop()
 
 # --- 4. THE ANALYSIS SANDBOX ---
 st.header("🔍 Threat Scan Sandbox")
-uploaded_file = st.file_uploader("Drop suspected log file (CSV)", type="csv")
+uploaded_file = st.file_uploader("Drop suspected security logs (CSV)", type="csv")
 
 if uploaded_file:
     input_data = pd.read_csv(uploaded_file)
-    prediction = model.predict(input_data.iloc[:, :20])
-    prob = model.predict_proba(input_data.iloc[:, :20])[0][1]
+    # Ensure input matches model features
+    test_row = input_data[feature_names].iloc[:1]
+    
+    prediction = model.predict(test_row)
+    prob = model.predict_proba(test_row)[0][1]
 
     res_col, chart_col = st.columns([1, 2])
 
     with res_col:
         if prediction[0] == 1:
             st.error(f"🚨 MALWARE DETECTED: {prob:.2%} Confidence")
-            st.warning("Recommendation: Immediate Quarantine")
+            st.warning("**Recommendation:** Immediate Quarantine Required")
         else:
             st.success(f"✅ CLEAN FILE: {1-prob:.2%} Confidence")
-            st.info("Recommendation: Safe to Deploy")
+            st.info("**Recommendation:** Safe for Production Deployment")
 
     with chart_col:
-        # ADVANCED RADAR CHART
-        risk_scores = np.random.uniform(0.2, 0.9, size=len(feature_names[:8]))
-        radar_df = pd.DataFrame(dict(r=risk_scores, theta=feature_names[:8]))
-        fig = px.line_polar(radar_df, r='r', theta='theta', line_close=True, templ="plotly_dark")
+        # RADAR CHART: Visualizing Threat Vectors
+        # We use random weights for demo visuals based on actual features
+        risk_scores = np.random.uniform(0.1, 0.95, size=len(feature_names[:10]))
+        radar_df = pd.DataFrame(dict(r=risk_scores, theta=feature_names[:10]))
+        fig = px.line_polar(radar_df, r='r', theta='theta', line_close=True, template="plotly_dark")
         fig.update_traces(fill='toself', line_color='#ff4b4b')
-        st.plotly_chart(fig)
+        st.plotly_chart(fig, use_container_width=True)
 
 st.divider()
-
+st.caption("Developed by Ian Kimani | Kaimosi Friends National Polytechnic")
