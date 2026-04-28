@@ -28,7 +28,7 @@ col3.metric("Analysis Latency", "14ms", "-2ms")
 
 st.divider()
 
-# --- 3. THE SMART DATA CORE ---
+# --- 3. DATA CORE (POSITION-BASED) ---
 @st.cache_data
 def load_and_train():
     files_on_server = os.listdir('.')
@@ -41,25 +41,23 @@ def load_and_train():
         
     df = pd.read_csv(match)
     
-    # FIX: Use index instead of name. Assume the last column is the Label.
-    # X = everything except the last column (first 20 features)
-    X = df.iloc[:, :20] 
-    # y = the very last column
+    # Train on the first 20 columns (values only, no names)
+    X = df.iloc[:, :20].values 
+    # Label is the last column
     y_raw = df.iloc[:, -1]
-    y = y_raw.apply(lambda x: 1 if 'malware' in str(x).lower() else 0)
+    y = y_raw.apply(lambda x: 1 if 'malware' in str(x).lower() else 0).values
     
     model = XGBClassifier(n_estimators=100, learning_rate=0.1, max_depth=5)
-    model.fit(X.values, y.values)
-    return model, X.columns.tolist()
+    model.fit(X, y)
+    return model
 
 # --- RUN THE ENGINE ---
 try:
     with st.spinner("🛰️ Establishing Neural Link..."):
-        model, feature_names = load_and_train()
+        model = load_and_train()
     st.success("📡 Sentinel Intelligence Online")
 except Exception as e:
     st.error(f"⚠️ Initialization Failed: {e}")
-    st.info("Tip: Ensure your CSV has features in the first columns and labels in the last.")
     st.stop()
 
 # --- 4. THE ANALYSIS SANDBOX ---
@@ -67,12 +65,14 @@ st.header("🔍 Threat Scan Sandbox")
 uploaded_file = st.file_uploader("Drop suspected security logs (CSV)", type="csv")
 
 if uploaded_file:
-    input_data = pd.read_csv(uploaded_file)
-    # Match the features
-    test_row = input_data[feature_names].iloc[:1]
+    # Read the file the user just uploaded
+    input_df = pd.read_csv(uploaded_file)
     
-    prediction = model.predict(test_row)
-    prob = model.predict_proba(test_row)[0][1]
+    # CRITICAL FIX: Ignore names, just take the first 20 columns of the uploaded file
+    test_data = input_df.iloc[:1, :20].values
+    
+    prediction = model.predict(test_data)
+    prob = model.predict_proba(test_data)[0][1]
 
     res_col, chart_col = st.columns([1, 2])
 
@@ -85,11 +85,13 @@ if uploaded_file:
             st.info("**Recommendation:** Safe for Production Deployment")
 
     with chart_col:
-        risk_scores = np.random.uniform(0.1, 0.95, size=len(feature_names[:10]))
-        radar_df = pd.DataFrame(dict(r=risk_scores, theta=feature_names[:10]))
+        # Generate dummy labels for the Radar chart since we are ignoring column names
+        labels = [f"Vector_{i+1}" for i in range(10)]
+        risk_scores = np.random.uniform(0.1, 0.95, size=10)
+        radar_df = pd.DataFrame(dict(r=risk_scores, theta=labels))
         fig = px.line_polar(radar_df, r='r', theta='theta', line_close=True, template="plotly_dark")
-        fig.update_traces(fill='toself', line_color='#ff4b4b')
+        fig.update_traces(fill='toself', line_color='#00ff41')
         st.plotly_chart(fig, use_container_width=True)
 
 st.divider()
-st.caption("Developed by Tectitans | Kenya Incusivity in Tech Initiative")
+st.caption("Developed by Ian Kimani | ")
