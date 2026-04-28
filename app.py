@@ -157,7 +157,7 @@ st.markdown(
     <div class="footer-text">
         <b>CORE X v1.0.0</b> | Powered by Tectitans Kaimosi<br>
         Part of the <b>Kenya Inclusivity in Tech Initiative</b><br>
-        Kaimosi Friends National Polytechnic Secure Systems Lab
+        C4DLab University of Nairobi
     </div>
     """, 
     unsafe_allow_html=True
