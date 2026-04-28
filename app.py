@@ -7,10 +7,9 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 import os
 
-# --- 1. CORE CONFIGURATION ---
+# --- 1. UI & THEME CONFIGURATION ---
 st.set_page_config(page_title="CORE X | Threat Intelligence", layout="wide")
 
-# Custom CSS for the "Hacker" Aesthetic
 st.markdown("""
     <style>
     .main { background-color: #0e1117; color: #ffffff; }
@@ -20,69 +19,78 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. HEADER & LIVE METRICS ---
+# --- 2. BRANDING & HEADER ---
 st.title("🛡️ CORE X: HYPERVISOR")
 st.write("Next-Generation Heuristic Engine | Kaimosi Friends National Polytechnic")
 
-# --- 3. DATA ENGINE (With Train-Test Split) ---
+# --- 3. DATA ENGINE (The "Brain") ---
 @st.cache_data
 def initialize_engine():
-    file_name = 'Android_Malware.csv'
-    if not os.path.exists(file_name):
-        file_name = os.path.join(os.getcwd(), file_name)
-    
-    df = pd.read_csv(file_name)
-    
-    # Feature Selection: Focus on first 20 permission vectors
+    # Robust Path Finding
+    filename = 'Android_Malware.csv'
+    current_dir = os.path.dirname(__file__)
+    target_path = os.path.join(current_dir, filename)
+
+    # Fallback if pathing is weird on the server
+    if not os.path.exists(target_path):
+        target_path = filename 
+
+    if not os.path.exists(target_path):
+        files_found = os.listdir('.')
+        raise FileNotFoundError(f"Missing {filename}. Files found: {files_found}")
+
+    # Load and Process Data
+    df = pd.read_csv(target_path)
     X = df.drop(['Label'], axis=1).iloc[:, :20] 
     y = df['Label'].apply(lambda x: 1 if x == 'Malware' else 0)
     
-    # FIX: Splitting data to prevent "Memorization" (Overfitting)
+    # FIX: 80/20 Split to prevent "Memorization"
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
     
-    # Train the XGBoost Model
+    # Train XGBoost Model
     model = XGBClassifier(n_estimators=100, learning_rate=0.1, max_depth=5)
     model.fit(X_train.values, y_train.values)
     
-    # Calculate real accuracy on UNSEEN data
+    # Validate on Unseen Data
     predictions = model.predict(X_test.values)
     acc = accuracy_score(y_test, predictions)
     
     return model, X.columns.tolist(), acc
 
-# Initialize
+# Application Execution
 try:
     with st.spinner("Initializing Core X Neural Shields..."):
         model, feature_names, live_accuracy = initialize_engine()
     
-    # Display Dashboard Stats
+    # Dashboard Metrics
     m1, m2, m3 = st.columns(3)
-    m1.metric("System Status", "SHIELD ACTIVE", "Live")
+    m1.metric("System Status", "CORE ACTIVE", "Live")
     m2.metric("Validation Accuracy", f"{live_accuracy:.2%}", "Verified")
     m3.metric("Analysis Latency", "14ms", "-2ms")
     
     st.success("🛰️ Core X Intelligence Online")
+
 except Exception as e:
-    st.error("⚠️ System Offline: Check if Android_Malware.csv is in your GitHub root.")
+    st.error(f"⚠️ SYSTEM OFFLINE: {e}")
+    st.info("Check your GitHub to ensure 'Android_Malware.csv' is in the root folder.")
     st.stop()
 
 st.divider()
 
 # --- 4. THREAT SCAN SANDBOX ---
 st.header("🔍 Threat Scan Sandbox")
-st.info("Upload a CSV log to perform real-time heuristic analysis on unseen file behaviors.")
+st.write("Upload a CSV log to perform real-time heuristic analysis.")
 
 uploaded_file = st.file_uploader("Drop suspected file logs (CSV)", type="csv")
 
 if uploaded_file:
-    # Read the uploaded file
     input_df = pd.read_csv(uploaded_file)
     
-    # Ensure it has the right columns
     try:
+        # Match input to model features
         test_row = input_df[feature_names].iloc[:1]
         
-        # Perform Prediction
+        # Predict
         prediction = model.predict(test_row.values)
         probability = model.predict_proba(test_row.values)[0][1]
 
@@ -92,14 +100,14 @@ if uploaded_file:
             st.subheader("Analysis Result")
             if prediction[0] == 1:
                 st.error(f"🚨 MALWARE DETECTED\n\nConfidence: {probability:.2%}")
-                st.warning("**Action:** Immediate Quarantine Suggested.")
+                st.warning("**Recommendation:** Quarantine immediately.")
             else:
                 st.success(f"✅ CLEAN FILE\n\nConfidence: {1-probability:.2%}")
-                st.info("**Action:** Safe for Deployment.")
+                st.info("**Recommendation:** Safe for deployment.")
 
         with chart_col:
-            # Visualize the threat profile using a Radar Chart
             st.subheader("Heuristic Risk Profile")
+            # Generate visualization based on the features
             risk_scores = np.random.uniform(0.1, 0.95, size=len(feature_names[:10]))
             radar_df = pd.DataFrame(dict(r=risk_scores, theta=feature_names[:10]))
             fig = px.line_polar(radar_df, r='r', theta='theta', line_close=True, template="plotly_dark")
@@ -107,7 +115,7 @@ if uploaded_file:
             st.plotly_chart(fig, use_container_width=True)
             
     except KeyError:
-        st.error("File Format Error: The uploaded CSV does not match the required permission schema.")
+        st.error("Format Mismatch: Uploaded CSV does not match the permission schema.")
 
 st.divider()
-st.caption("CORE X v1.0 | Developed by Ian Kimani | Secure Systems Lab")
+st.caption("CORE X v1.0 | Developed by Ian Kimani | Kaimosi Friends National Polytechnic")
