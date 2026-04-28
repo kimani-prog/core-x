@@ -8,7 +8,7 @@ from sklearn.metrics import accuracy_score
 import os
 
 # --- 1. UI & THEME CONFIGURATION ---
-st.set_page_config(page_title="CORE X | Tectitans Kaimosi", layout="wide", page_icon="🛡️")
+st.set_page_config(page_title="CORE X | Tectitans", layout="wide", page_icon="🛡️")
 
 st.markdown("""
     <style>
@@ -26,7 +26,7 @@ st.markdown("""
 
 # --- 2. HEADER ---
 st.title("🛡️ CORE X: HYPERVISOR")
-st.markdown("#### **Tectitans Kaimosi** | Kenya Inclusivity in Tech Initiative")
+st.markdown("#### **Tectitans** | Kenya Inclusivity in Tech Initiative")
 st.divider()
 
 # --- 3. DATA ENGINE ---
@@ -115,5 +115,5 @@ if uploaded_file:
         st.error(f"⚠️ Analysis Interrupted: {e}")
 
 st.markdown("---")
-st.markdown("""<div class="footer-text"><b>CORE X v1.0.0</b> | Powered by Tectitans Kaimosi<br>Part of the <b>Kenya Inclusivity in Tech Initiative</b></div>""", unsafe_allow_html=True)
+st.markdown("""<div class="footer-text"><b>CORE X v1.0.0</b> | Powered by Tectitans<br>Part of the <b>Kenya Inclusivity in Tech Initiative</b></div>""", unsafe_allow_html=True)
 
