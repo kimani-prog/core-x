@@ -39,39 +39,26 @@ def initialize_engine():
     # Load Data
     df = pd.read_csv(target_path)
     
-    # --- ULTIMATE COLUMN DETECTOR ---
-    # We scan the actual content of the columns to find the one that says 'Malware'
-    target_col = None
-    for col in df.columns:
-        # Check if the column contains the string "malware" or "benign"
-        unique_values = df[col].astype(str).str.lower().unique()
-        if 'malware' in unique_values or 'benign' in unique_values:
-            target_col = col
-            break
+    # --- AUTOMATIC TARGET IDENTIFIER ---
+    # Most security datasets put the 'Malware/Benign' tag in the very last column.
+    target_col = df.columns[-1] 
     
-    # Fallback: If we still can't find it, check for a column named 'Label' or 'label'
-    if target_col is None:
-        for col in ['Label', 'label', 'Class', 'class', 'Status']:
-            if col in df.columns:
-                target_col = col
-                break
-
-    if target_col is None:
-        raise KeyError(f"Target Column Not Found. Please rename your result column to 'Label'.")
-
     # Process Features and Target
-    # We drop the label and take the first 20 permissions as features
+    # We take the first 20 permissions as features and the last column as target
     X = df.drop([target_col], axis=1).iloc[:, :20] 
-    y = df[target_col].apply(lambda x: 1 if str(x).lower() in ['malware', '1', 'positive'] else 0)
     
-    # 80/20 Split
+    # Convert labels to 1s and 0s
+    # It checks if the value is 'Malware', '1', or 'positive'
+    y = df[target_col].apply(lambda x: 1 if str(x).lower() in ['malware', '1', 'positive', 'true'] else 0)
+    
+    # 80/20 Train-Test Split
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
     
-    # Train Model
+    # Train XGBoost Model
     model = XGBClassifier(n_estimators=100, learning_rate=0.1, max_depth=5)
     model.fit(X_train.values, y_train.values)
     
-    # Validate
+    # Calculate Validation Accuracy
     predictions = model.predict(X_test.values)
     acc = accuracy_score(y_test, predictions)
     
