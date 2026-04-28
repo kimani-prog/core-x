@@ -43,7 +43,7 @@ st.markdown("""
 col_logo, col_title = st.columns([1, 5])
 with col_title:
     st.title("🛡️ CORE X: HYPERVISOR")
-    st.markdown("#### **Tectitans Kaimosi** | Kenya Inclusivity in Tech Initiative")
+    st.markdown("#### **Tectitans KITI** | Kenya Inclusivity in Tech Initiative")
     st.caption("Advanced AI Heuristics for Real-Time Malware Pattern Recognition")
 
 st.divider()
